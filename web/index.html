@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Rolling Ronny</title>
+<link rel="icon" href="data:,">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #ddd; font: 16px monospace; }
+  body { display: flex; align-items: center; justify-content: center; }
+  #msg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  canvas { image-rendering: pixelated; touch-action: none; }
+  html, body { overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #rotate { display: none; position: fixed; top: 0; left: 0; right: 0; padding: 6px; text-align: center; background: #000a; z-index: 2; pointer-events: none; }
+  @media (orientation: portrait) { #rotate { display: block; } }
+</style>
+</head>
+<body>
+<div id="msg">Caricamento…</div>
+<div id="rotate">Ruota il telefono in orizzontale per giocare meglio</div>
+<script src="wasm_exec.js"></script>
+<script>
+  const go = new Go();
+  WebAssembly.instantiateStreaming(fetch("rolling-ronny.wasm"), go.importObject).then(r => {
+    document.getElementById("msg").remove();
+    go.run(r.instance);
+  }).catch(e => { document.getElementById("msg").textContent = "Errore: " + e; });
+</script>
+</body>
+</html>

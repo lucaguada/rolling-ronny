@@ -1,0 +1,7 @@
+# extracted game assets and original DOS files are NOT published (copyright): provide your own under assets/
+/assets/
+/rolling-ronny
+/web/rolling-ronny.wasm
+/web/wasm_exec.js
+.remember/
+.playwright-mcp/
