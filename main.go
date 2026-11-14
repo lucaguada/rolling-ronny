@@ -71,7 +71,7 @@ func (g *Game) startLevel(n int) {
 	g.health, g.energy, g.ticksLeft, g.cubes = maxMeter, maxMeter, levelTime, 0
 	g.startScore, g.startPence = g.score, g.pence
 	g.cam = 0
-	g.audio.playMusic(n)
+	g.audio.playMusic()
 }
 
 func (g *Game) input() Input {

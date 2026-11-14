@@ -15,8 +15,8 @@ Debug env vars: `RR_LEVEL=n` start in level n, `RR_X=px` start x, `RR_SHOT=file.
 
     ./build-web.sh && python3 -m http.server -d web 8080     # then open http://localhost:8080
 
-`web/` is a static site (index.html, wasm_exec.js, rolling-ronny.wasm ~32 MB, mostly music): host it anywhere,
-ideally with gzip/brotli enabled (shrinks the wasm a lot). Click the page once if the browser blocks audio.
+`web/` is a static site (index.html, wasm_exec.js, rolling-ronny.wasm ~18 MB): host it anywhere,
+gzip shrinks it to ~5 MB. Click the page once if the browser blocks audio.
 
 ## Assets
 The graphics/music are extracted from the original DOS game and are **not** part of this repository (`/assets` is git-ignored).

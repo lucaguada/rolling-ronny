@@ -12,6 +12,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 )
 
@@ -29,7 +30,7 @@ const root = "assets/assets/"
 //go:embed assets/assets/gfx/*.png
 //go:embed assets/assets/fonts/ibm_vga8x8.png
 //go:embed assets/assets/sfx/*.wav
-//go:embed assets/assets/music/*.wav
+//go:embed assets/assets/music/song.ogg
 var fsys embed.FS
 
 func must[T any](v T, err error) T {
@@ -127,10 +128,14 @@ func (a *Audio) play(name string) {
 	}
 }
 
-func (a *Audio) playMusic(level int) {
-	a.stopMusic()
-	s := must(wav.DecodeWithSampleRate(44100, bytes.NewReader(readFile(fmt.Sprintf("music/%02d.wav", level)))))
-	a.music = must(a.ctx.NewPlayer(audio.NewInfiniteLoop(s, s.Length())))
+// playMusic starts the single looping song (the original has one tune for all levels, docs/SOUND.md);
+// it keeps playing across levels. 83.4 s = the song's loop point (song.wav has a short silent tail).
+func (a *Audio) playMusic() {
+	if a.music != nil {
+		return
+	}
+	s := must(vorbis.DecodeWithSampleRate(44100, bytes.NewReader(readFile("music/song.ogg"))))
+	a.music = must(a.ctx.NewPlayer(audio.NewInfiniteLoop(s, int64(83.4*44100)*4)))
 	a.music.SetVolume(0.5)
 	if a.on {
 		a.music.Play()
