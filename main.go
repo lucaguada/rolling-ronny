@@ -47,6 +47,7 @@ type Game struct {
 	touchUI                       bool
 	w                             int // logical screen width (Layout)
 	frame                         *ebiten.Image
+	fx                            fireworks
 }
 
 func newGame() *Game {
@@ -108,6 +109,7 @@ func (g *Game) Update() error {
 	}
 	switch g.st {
 	case stTitle:
+		g.fx.update()
 		if g.confirm() {
 			g.score, g.pence = 0, 0
 			g.startLevel(1)
@@ -237,8 +239,11 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 	switch g.st {
 	case stTitle:
 		screen.DrawImage(g.title, nil)
-		g.hud.centered(screen, "ROLLING RONNY", 60, 3)
-		g.hud.centered(screen, "PRESS ENTER OR TAP", 130, 1)
+		g.fx.draw(screen)
+		g.hud.centered(screen, "ROLLING RONNY", 24, 3)
+		g.wave(screen, "Buon Compleanno", 80, 2)
+		g.wave(screen, "Erika!", 108, 3)
+		g.hud.centered(screen, "PRESS ENTER OR TAP", 170, 1)
 		g.hud.centered(screen, "ARROWS/AD MOVE  SPACE/Z JUMP  M MUSIC", 222, 1)
 	default:
 		g.drawPlay(screen)
