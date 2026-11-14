@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/png"
 	"log"
 	"os"
@@ -44,6 +45,8 @@ type Game struct {
 	shotAt                        int
 	bot                           bool
 	touchUI                       bool
+	w                             int // logical screen width (Layout)
+	frame                         *ebiten.Image
 }
 
 func newGame() *Game {
@@ -100,7 +103,7 @@ func (g *Game) confirm() bool {
 
 func (g *Game) Update() error {
 	g.frames++
-	if inpututil.IsKeyJustPressed(ebiten.KeyM) || (g.touchUI && anyIn(justTouched(), btnMusic)) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyM) || (g.touchUI && anyIn(justTouched(), g.pad().music)) {
 		g.audio.toggle()
 	}
 	switch g.st {
@@ -216,7 +219,21 @@ func (g *Game) collect(e *Ent) {
 	}
 }
 
+// Draw renders the 320x240 game into g.frame and centres it; the touch buttons live in the black side margins.
 func (g *Game) Draw(screen *ebiten.Image) {
+	if g.frame == nil {
+		g.frame = ebiten.NewImage(screenW, screenH)
+	}
+	g.drawGame(g.frame)
+	screen.Fill(color.Black)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(g.margin()), 0)
+	screen.DrawImage(g.frame, op)
+	g.drawTouch(screen)
+	g.screenshot(screen)
+}
+
+func (g *Game) drawGame(screen *ebiten.Image) {
 	switch g.st {
 	case stTitle:
 		screen.DrawImage(g.title, nil)
@@ -237,14 +254,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			g.hud.centered(screen, fmt.Sprintf("SCORE %d", g.score), 110, 2)
 		}
 	}
+}
+
+func (g *Game) screenshot(screen *ebiten.Image) {
 	if g.shotPath != "" && g.frames == g.shotAt {
 		f := must(os.Create(g.shotPath))
 		defer f.Close()
-		img := ebiten.NewImage(screenW, screenH)
-		img.DrawImage(screen, nil)
-		px := make([]byte, 4*screenW*screenH)
-		img.ReadPixels(px)
-		rgba := &image.RGBA{Pix: px, Stride: 4 * screenW, Rect: image.Rect(0, 0, screenW, screenH)}
+		w, h := screen.Bounds().Dx(), screen.Bounds().Dy()
+		px := make([]byte, 4*w*h)
+		screen.ReadPixels(px)
+		rgba := &image.RGBA{Pix: px, Stride: 4 * w, Rect: image.Rect(0, 0, w, h)}
 		if err := png.Encode(f, rgba); err != nil {
 			log.Fatal(err)
 		}
@@ -271,10 +290,20 @@ func (g *Game) drawPlay(screen *ebiten.Image) {
 	}
 	l.drawFrame(screen, l.defs[l.ronny], g.p.frame(), g.p.x, g.p.y, g.cam, g.p.invuln > 0 && g.p.hurtT == 0 && g.frames/3%2 == 0)
 	g.hud.draw(screen, g)
-	g.drawTouch(screen)
 }
 
-func (g *Game) Layout(int, int) (int, int) { return screenW, screenH }
+// Layout keeps the height at 240 and widens the logical screen to the window's aspect ratio, so the extra
+// width becomes black margins. With touch controls active the margins are at least minPad wide.
+func (g *Game) Layout(outW, outH int) (int, int) {
+	w := max(screenW, min(maxW, screenH*outW/max(outH, 1)))
+	if g.touchUI {
+		w = max(w, screenW+2*minPad)
+	}
+	g.w = w
+	return w, screenH
+}
+
+func (g *Game) margin() int { return (max(g.w, screenW) - screenW) / 2 }
 
 func main() {
 	ebiten.SetWindowSize(screenW*3, screenH*3)

@@ -9,22 +9,36 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-// On-screen controls for phones/tablets, in logical (320x240) coordinates.
-// They appear as soon as a touch is seen and are drawn over the play area, above the HUD.
+// On-screen controls for phones/tablets. They sit in the black side margins next to the 320x240 game
+// (logical coordinates; the game is centred, margin() px on each side) so they never cover the action.
+const (
+	minPad = 90  // minimum margin width when the touch UI is shown
+	maxW   = 600 // widest logical screen (ultra-wide phones)
+)
+
 type button struct {
 	r     image.Rectangle
-	glyph byte // CP437 arrow in the 8x8 font
+	glyph byte // CP437 glyph in the 8x8 font
 }
 
-var (
-	btnLeft  = button{image.Rect(4, 150, 48, 202), 0x1B}
-	btnRight = button{image.Rect(54, 150, 98, 202), 0x1A}
-	btnJump  = button{image.Rect(226, 150, 276, 202), 'A'}
-	btnUp    = button{image.Rect(282, 94, 316, 144), 0x18}
-	btnDown  = button{image.Rect(282, 150, 316, 202), 0x19}
-	btnMusic = button{image.Rect(292, 4, 316, 24), 'M'}
-	allBtns  = []button{btnLeft, btnRight, btnJump, btnUp, btnDown, btnMusic}
-)
+type padLayout struct{ left, right, up, down, jump, music button }
+
+func (p padLayout) all() []button { return []button{p.left, p.right, p.up, p.down, p.jump, p.music} }
+
+// pad lays the buttons out for the current logical width: d-pad in the left margin, jump on the right.
+func (g *Game) pad() padLayout {
+	w := max(g.w, screenW+2*minPad)
+	m := (w - screenW) / 2
+	bw := (m - 18) / 2
+	return padLayout{
+		left:  button{image.Rect(6, 150, 6+bw, 202), 0x1B},
+		right: button{image.Rect(12+bw, 150, 12+2*bw, 202), 0x1A},
+		up:    button{image.Rect(6, 94, 6+bw, 144), 0x18},
+		down:  button{image.Rect(12+bw, 94, 12+2*bw, 144), 0x19},
+		jump:  button{image.Rect(w-m+6, 94, w-6, 202), 'A'},
+		music: button{image.Rect(w-m+6, 6, w-m+6+26, 26), 'M'},
+	}
+}
 
 func touchPoints() []image.Point {
 	var pts []image.Point
@@ -59,12 +73,13 @@ func (g *Game) touchInput(in Input) Input {
 	if len(held) > 0 {
 		g.touchUI = true
 	}
-	in.L = in.L || anyIn(held, btnLeft)
-	in.R = in.R || anyIn(held, btnRight)
-	in.U = in.U || anyIn(held, btnUp)
-	in.D = in.D || anyIn(held, btnDown)
-	in.JumpHeld = in.JumpHeld || anyIn(held, btnJump)
-	in.Jump = in.Jump || anyIn(fresh, btnJump)
+	p := g.pad()
+	in.L = in.L || anyIn(held, p.left)
+	in.R = in.R || anyIn(held, p.right)
+	in.U = in.U || anyIn(held, p.up)
+	in.D = in.D || anyIn(held, p.down)
+	in.JumpHeld = in.JumpHeld || anyIn(held, p.jump)
+	in.Jump = in.Jump || anyIn(fresh, p.jump)
 	return in
 }
 
@@ -73,7 +88,7 @@ func (g *Game) drawTouch(dst *ebiten.Image) {
 		return
 	}
 	held := touchPoints()
-	for _, b := range allBtns {
+	for _, b := range g.pad().all() {
 		a := float32(0.32)
 		if anyIn(held, b) {
 			a = 0.5
