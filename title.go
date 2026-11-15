@@ -9,6 +9,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
+// birthday turns the greeting and fireworks on the title screen on or off.
+const birthday = false
+
 type spark struct {
 	x, y, vx, vy float64
 	life, max    int
