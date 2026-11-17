@@ -10,7 +10,7 @@ import (
 )
 
 // birthday turns the greeting and fireworks on the title screen on or off.
-const birthday = false
+const birthday = true
 
 type spark struct {
 	x, y, vx, vy float64
