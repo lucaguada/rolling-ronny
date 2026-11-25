@@ -244,8 +244,8 @@ func (g *Game) drawGame(screen *ebiten.Image) {
 		if birthday {
 			g.fx.draw(screen)
 			g.hud.centered(screen, "ROLLING RONNY", 24, 3)
-			g.wave(screen, "Buon Compleanno", 80, 2)
-			g.wave(screen, "Lorenz!", 108, 3)
+			g.wave(screen, "Grande Argento", 80, 2)
+			g.wave(screen, "Cristina!", 108, 3)
 			g.hud.centered(screen, "PRESS ENTER OR TAP", 170, 1)
 		} else {
 			g.hud.centered(screen, "ROLLING RONNY", 60, 3)
